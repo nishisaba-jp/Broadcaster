@@ -16,6 +16,10 @@ dependencies {
 
     api(libs.sqlite)
 
+    // Used by the transfer join mode, only shipped with standalone as Geyser has its own
+    compileOnly(libs.protocol.connection)
+    compileOnly(libs.libdatachannel.natives)
+
     annotationProcessor(libs.configurate.`interface`.ap)
     api(libs.configurate.`interface`)
     implementation(libs.configurate.yaml)
