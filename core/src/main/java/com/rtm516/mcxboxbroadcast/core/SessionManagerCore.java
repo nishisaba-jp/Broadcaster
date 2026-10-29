@@ -11,8 +11,11 @@ import com.rtm516.mcxboxbroadcast.core.models.session.SessionRef;
 import com.rtm516.mcxboxbroadcast.core.models.session.SocialSummaryResponse;
 import com.rtm516.mcxboxbroadcast.core.notifications.NotificationManager;
 import com.rtm516.mcxboxbroadcast.core.storage.StorageManager;
+import com.rtm516.mcxboxbroadcast.core.configs.CoreConfig;
 import com.rtm516.mcxboxbroadcast.core.nethernet.HttpRelaySignaling;
+import com.rtm516.mcxboxbroadcast.core.nethernet.transfer.TransferSignaling;
 import net.raphimc.minecraftauth.bedrock.BedrockAuthManager;
+import org.cloudburstmc.netty.channel.nethernet.signaling.NetherNetXboxRpcSignaling;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +54,12 @@ public abstract class SessionManagerCore {
      */
     protected boolean allowIpv6 = false;
 
-    private HttpRelaySignaling signaling;
+    /**
+     * How joins from the friends list reach the target server
+     */
+    protected CoreConfig.SessionConfig.JoinMode joinMode = CoreConfig.SessionConfig.JoinMode.Relay;
+
+    private NetherNetXboxRpcSignaling signaling;
 
     /**
      * Create an instance of SessionManager
@@ -435,7 +443,12 @@ public abstract class SessionManagerCore {
 
         long netherNetId = this.sessionInfo.getNetherNetId().longValue();
 
-        this.signaling = new HttpRelaySignaling(netherNetId, getMCTokenHeader(), InetSocketAddress.createUnresolved(sessionInfo.getIp(), sessionInfo.getPort()), storageManager.playerHistory(), allowIpv6, logger);
+        InetSocketAddress target = InetSocketAddress.createUnresolved(sessionInfo.getIp(), sessionInfo.getPort());
+        if (joinMode == CoreConfig.SessionConfig.JoinMode.Transfer && TransferSignaling.loadNatives(logger)) {
+            this.signaling = new TransferSignaling(netherNetId, getMCTokenHeader(), target, storageManager.playerHistory(), logger);
+        } else {
+            this.signaling = new HttpRelaySignaling(netherNetId, getMCTokenHeader(), target, storageManager.playerHistory(), allowIpv6, logger);
+        }
 
         this.sessionInfo.setPmsgId(getAuthManager().getMinecraftSession().getCached().getParsedToken().getPayload().reqString("pmid"));
 
