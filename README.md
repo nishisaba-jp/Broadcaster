@@ -5,6 +5,11 @@
 
 A simple tool that broadcasts an existing [Geyser](https://github.com/GeyserMC/Geyser)/Bedrock server over Xbox Live.
 
+> [!NOTE]
+> This is a fork used by にし鯖. The standalone version accepts friend list joins itself and transfers players to the server
+> (`join-mode: Transfer` in the `session` section, the default here), so the server sees each player's real IP instead of the
+> address MCXboxBroadcast runs on. Set `join-mode: Relay` to go back to relaying joins like upstream.
+
 This shows up to the authenticated accounts friends in-game as a joinable session.
 
 ![Example screenshot](https://github.com/user-attachments/assets/aa82e305-a7ec-4d6f-8537-3d02b272957c)
