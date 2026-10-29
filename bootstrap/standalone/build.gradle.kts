@@ -9,6 +9,9 @@ plugins {
 dependencies {
     api(project(":core"))
 
+    api(libs.protocol.connection)
+    api(libs.libdatachannel.natives)
+
     api(libs.terminalconsoleappender) {
         exclude("org.apache.logging.log4j")
         exclude("org.jline")
@@ -29,6 +32,9 @@ tasks.withType<ShadowJar> {
         duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
     
+    // We don't ship musl elsewhere either
+    exclude("linux-musl-*/**")
+
     // Suppress illegal access warnings for natives
     manifest {
         attributes["Enable-Native-Access"] = "ALL-UNNAMED"
