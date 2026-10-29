@@ -672,6 +672,16 @@ public class SessionManager extends SessionManagerCore {
     }
 
     /**
+     * Set how joins from the friends list reach the target server
+     * Transfer needs the libdatachannel natives, so only the standalone version uses it
+     *
+     * @param joinMode The join mode to use
+     */
+    public void setJoinMode(CoreConfig.SessionConfig.JoinMode joinMode) {
+        this.joinMode = joinMode;
+    }
+
+    /**
      * Set the callback to run when the session manager needs to be restarted
      *
      * @param restart The callback to run
