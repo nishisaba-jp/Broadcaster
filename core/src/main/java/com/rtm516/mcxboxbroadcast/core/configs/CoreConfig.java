@@ -90,6 +90,21 @@ public interface CoreConfig {
         @DefaultBoolean(false)
         boolean allowIpv6();
 
+        @Comment("""
+            How players joining from the friends list get to the server
+            Transfer: they join an empty world here and get transferred, so the server sees their real IP
+            Relay: their offer is relayed to the server's NetherNet signaling, so the server sees this machine's IP""")
+        @ExcludePlatform(platforms = {"Extension"})
+        default JoinMode joinMode() {
+            return JoinMode.Transfer;
+        }
+        void joinMode(JoinMode mode);
+
+        enum JoinMode {
+            Transfer,
+            Relay
+        }
+
         @ConfigSerializable
         interface SessionInfo {
             @Comment("The host name to broadcast")
