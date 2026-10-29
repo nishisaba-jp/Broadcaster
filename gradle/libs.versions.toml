@@ -1,6 +1,7 @@
 [versions]
 protocol-codec = "3.0.0.Beta15-20261026.210753-2"
 network = "2.0.0.CR6-20261026.130552-16"
+libdatachannel = "0.24.6.0-20261023.142230-9"
 geyser ="2.12.1-SNAPSHOT"
 java-websocket = "1.5.3"
 log4j = "2.20.0"
@@ -20,6 +21,7 @@ minotaur = "2.9.0"
 
 [libraries]
 protocol-codec = { group = "org.cloudburstmc.protocol", name = "bedrock-codec", version.ref = "protocol-codec" }
+protocol-connection = { group = "org.cloudburstmc.protocol", name = "bedrock-connection", version.ref = "protocol-codec" }
 
 geyser-api = { group = "org.geysermc.geyser", name = "api", version.ref = "geyser" }
 geyser-core = { group = "org.geysermc.geyser", name = "core", version.ref = "geyser" }
@@ -54,6 +56,7 @@ methanol = { group = "com.github.mizosoft.methanol", name = "methanol", version.
 minecraftauth = { group = "net.raphimc", name = "MinecraftAuth", version.ref = "minecraftauth" }
 
 nethernet-transport = { group = "org.cloudburstmc.netty", name = "netty-transport-nethernet", version.ref = "network" }
+libdatachannel-natives = { group = "dev.opencollab", name = "libdatachannel-java-arch-detect", version.ref = "libdatachannel" }
 
 sqlite = { group = "org.xerial", name = "sqlite-jdbc", version.ref = "sqlite" }
 
