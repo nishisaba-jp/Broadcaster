@@ -19,6 +19,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v6
       with:
@@ -35,16 +37,24 @@ jobs:
 
     - name: Get previous build number
       id: getPreviousBuild
-      run: | 
-        PREVIOUS_TAG=$(git for-each-ref --sort=-version:refname --count 1 --format="%(refname:short)" "refs/tags/*")
-        echo result=${PREVIOUS_TAG} >> $GITHUB_OUTPUT
+      run: |
+        # Upstream builds are plain numbers, ours are <upstream build>-<n>
+        UPSTREAM_BUILD=$(git tag --merged HEAD | grep -E '^[0-9]+$' | sort -n | tail -n 1)
+        UPSTREAM_BUILD=${UPSTREAM_BUILD:-0}
+        PREVIOUS_TAG=$(git tag --merged HEAD | grep -E "^${UPSTREAM_BUILD}-[0-9]+$" | sort -t- -k2 -n | tail -n 1)
+        echo upstream=${UPSTREAM_BUILD} >> $GITHUB_OUTPUT
+        echo result=${PREVIOUS_TAG:-$UPSTREAM_BUILD} >> $GITHUB_OUTPUT
 
     - name: Get current build number
       id: getCurrentBuild
       if: success()
       env:
+        UPSTREAM_BUILD: ${{ steps.getPreviousBuild.outputs.upstream }}
         PREVIOUS_BUILD: ${{ steps.getPreviousBuild.outputs.result }}
-      run: echo result=$((++PREVIOUS_BUILD)) >> $GITHUB_OUTPUT
+      run: |
+        PREVIOUS_N=0
+        [[ "$PREVIOUS_BUILD" == *-* ]] && PREVIOUS_N=${PREVIOUS_BUILD##*-}
+        echo result=${UPSTREAM_BUILD}-$((PREVIOUS_N + 1)) >> $GITHUB_OUTPUT
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v5
@@ -54,7 +64,7 @@ jobs:
     - name: Build
       run: ./gradlew build
       env:
-        BUILD_NUMBER: ${{ steps.getCurrentBuild.outputs.result }}
+        BUILD_NUMBER: ${{ steps.getPreviousBuild.outputs.upstream }}
 
     - uses: actions/upload-artifact@v7
       if: success()
@@ -90,7 +100,7 @@ jobs:
       if: ${{ success() && github.repository == 'MCXboxBroadcast/Broadcaster' &&  github.ref_name == 'master' }}
       run: ./gradlew :bootstrap-geyser:modrinth
       env:
-        BUILD_NUMBER: ${{ steps.getCurrentBuild.outputs.result }}
+        BUILD_NUMBER: ${{ steps.getPreviousBuild.outputs.upstream }}
         MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
 
     - name: Create release
@@ -108,6 +118,7 @@ jobs:
 
   docker-standalone:
     needs: build
+    if: ${{ github.repository == 'MCXboxBroadcast/Broadcaster' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
