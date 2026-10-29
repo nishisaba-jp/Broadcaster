@@ -37,9 +37,11 @@ jobs:
 
     - name: Get previous build number
       id: getPreviousBuild
+      env:
+        UPSTREAM_BUILD: ${{ vars.UPSTREAM_BUILD }}
       run: |
         # Upstream builds are plain numbers, ours are <upstream build>-<n>
-        UPSTREAM_BUILD=$(git tag --merged HEAD | grep -E '^[0-9]+$' | sort -n | tail -n 1)
+        [[ -z "$UPSTREAM_BUILD" ]] && UPSTREAM_BUILD=$(git tag --merged HEAD | grep -E '^[0-9]+$' | sort -n | tail -n 1)
         UPSTREAM_BUILD=${UPSTREAM_BUILD:-0}
         PREVIOUS_TAG=$(git tag --merged HEAD | grep -E "^${UPSTREAM_BUILD}-[0-9]+$" | sort -t- -k2 -n | tail -n 1)
         echo upstream=${UPSTREAM_BUILD} >> $GITHUB_OUTPUT
