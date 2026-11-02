@@ -7,6 +7,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.util.NetUtil;
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannelFactory;
 import org.cloudburstmc.netty.channel.nethernet.NetherNetConstants;
 import org.cloudburstmc.netty.channel.nethernet.signaling.IceServerInfo;
@@ -15,6 +16,7 @@ import org.cloudburstmc.netty.util.nethernet.IdentityUtils;
 import org.jose4j.jwt.JwtClaims;
 import tel.schich.libdatachannel.LibDataChannelArchDetect;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
@@ -75,7 +77,14 @@ public class TransferSignaling extends NetherNetXboxRpcSignaling {
     @Override
     public CompletableFuture<List<IceServerInfo>> connect(SocketAddress remoteAddress) {
         // Binding waits on the signaling with no timeout, so only start once it is up
-        return super.connect(remoteAddress).thenCompose(iceServers -> startServer().thenApply(ignored -> iceServers));
+        return super.connect(remoteAddress)
+            .thenCompose(iceServers -> startServer().thenApply(ignored -> iceServers))
+            .whenComplete((iceServers, error) -> {
+                // Without the server nobody can join, so drop the signaling and let the session be recreated
+                if (error != null) {
+                    close();
+                }
+            });
     }
 
     private CompletableFuture<Void> startServer() {
@@ -107,11 +116,22 @@ public class TransferSignaling extends NetherNetXboxRpcSignaling {
                         serverChannel = future.channel();
                     }
                     logger.info("Transferring joins to " + target.getHostString() + ":" + target.getPort());
+                    warnIfUnreachable();
                     started.complete(null);
                 });
         }
 
         return started;
+    }
+
+    /**
+     * Players are sent to the target address, so a local one won't work for them
+     */
+    private void warnIfUnreachable() {
+        InetAddress address = NetUtil.createInetAddressFromIpAddressString(target.getHostString());
+        if (address != null && (address.isLoopbackAddress() || address.isAnyLocalAddress() || address.isSiteLocalAddress() || address.isLinkLocalAddress())) {
+            logger.warn("remote-address is " + target.getHostString() + ", players are transferred there so set it to an address they can reach");
+        }
     }
 
     private void stopServer() {
