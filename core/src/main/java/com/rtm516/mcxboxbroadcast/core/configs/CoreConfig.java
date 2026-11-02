@@ -86,6 +86,7 @@ public interface CoreConfig {
         @Comment("""
             How players joining from the friends list get to the server
             Transfer: they join an empty world here and get transferred, so the server sees their real IP
+                      Players are sent to remote-address, so it has to be reachable by them
             Relay: their offer is relayed to the server's NetherNet signaling, so the server sees this machine's IP""")
         @ExcludePlatform(platforms = {"Extension"})
         default JoinMode joinMode() {
